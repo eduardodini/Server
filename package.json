@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "dev": "npm install npm && ./node_modules/.bin/ts-node-dev --respawn --transpile-only src/app.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Eduardo D.",
