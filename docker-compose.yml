@@ -4,10 +4,41 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    env_file:
+      - .env
     ports:
       - "4200:4200"
-    volumes:
-      - .:/app
-      - /app/node_modules
-    environment:
-      NODE_ENV: development
+    networks:
+      - mongoCluster
+    depends_on:
+      - mongo
+  mongo:
+     hostname: 'mongoDB'
+     container_name: 'mongoDB'
+     image: mongo:4.2
+     restart: 'on-failure'
+     networks:
+       - mongoCluster
+     expose:
+       - 27017
+     ports:
+       - "30001:27017"
+     env_file:
+       - .env
+     environment:
+       MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+       MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE}
+     volumes:
+       - dataMongo:/data/db
+       - logMongo:/var/log/mongodb
+     healthcheck:
+       test: test $$(echo "rs.status().ok" | mongo -u $${MONGO_INITDB_ROOT_USERNAME} -p $${MONGO_INITDB_ROOT_PASSWORD} --quiet) -eq 1
+       interval: 30s
+       start_period: 60s
+     command: ["--dbpath", "/data/db", "--logappend", "--bind_ip", "0.0.0.0", "--storageEngine", "wiredTiger" ]
+volumes:
+  dataMongo:
+  logMongo:
+networks:
+  mongoCluster:
